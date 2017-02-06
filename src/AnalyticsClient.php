@@ -1,6 +1,4 @@
-<?php
-
-namespace Spatie\Analytics;
+<?php namespace SoftArt\Packages\Analytics;
 
 use DateTime;
 use Google_Service_Analytics;
@@ -17,6 +15,12 @@ class AnalyticsClient
     /** @var int */
     protected $cacheLifeTimeInMinutes = 0;
 
+    /**
+     * @var int
+     */
+    protected $realTimeCacheLifeTimeInSeconds = 0;
+
+
     public function __construct(Google_Service_Analytics $service, Repository $cache)
     {
         $this->service = $service;
@@ -31,9 +35,24 @@ class AnalyticsClient
      *
      * @return self
      */
-    public function setCacheLifeTimeInMinutes(int $cacheLifeTimeInMinutes)
+    public function setCacheLifeTimeInMinutes($cacheLifeTimeInMinutes)
     {
         $this->cacheLifeTimeInMinutes = $cacheLifeTimeInMinutes;
+
+        return $this;
+    }
+
+    /**
+     * Set the cache time.
+     *
+     * @param int $realTimeCacheLifetimeInSeconds
+     * @return AnalyticsClient
+     * @internal param int $realTimeCacheLifeTimeInMinutes
+     * @internal param int $cacheLifeTimeInMinutes
+     */
+    public function setRealTimeCacheLifeTimeInMinutes($realTimeCacheLifetimeInSeconds)
+    {
+        $this->realTimeCacheLifetimeInSeconds = $realTimeCacheLifetimeInSeconds;
 
         return $this;
     }
@@ -68,7 +87,35 @@ class AnalyticsClient
         });
     }
 
-    public function getAnalyticsService(): Google_Service_Analytics
+    /**
+     * Query the Google Analytics Real Time Reporting Service with given parameters.
+     *
+     * @param int    $viewId
+     * @param string $metrics
+     * @param array  $others
+     *
+     * @return mixed
+     */
+    public function performRealTimeQuery($viewId, $metrics, array $others = [])
+    {
+        $cacheName = $this->determineCacheName(func_get_args());
+
+        if ($this->realTimeCacheLifeTimeInSeconds == 0) {
+            $this->cache->forget($cacheName);
+        }
+
+        return $this->cache->remember($cacheName, $this->realTimeCacheLifeTimeInSeconds, function () use ($viewId, $metrics, $others) {
+            return $this->service->data_realtime->get(
+               "ga:{$viewId}",
+               $metrics,
+               $others
+           );
+        });
+    }
+
+
+
+    public function getAnalyticsService()
     {
         return $this->service;
     }
@@ -76,8 +123,8 @@ class AnalyticsClient
     /*
      * Determine the cache name for the set of query properties given.
      */
-    protected function determineCacheName(array $properties): string
+    protected function determineCacheName(array $properties)
     {
-        return 'spatie.laravel-analytics.'.md5(serialize($properties));
+        return 'softart.laravel-analytics.'.md5(serialize($properties));
     }
 }

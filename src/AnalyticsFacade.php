@@ -1,6 +1,4 @@
-<?php
-
-namespace Spatie\Analytics;
+<?php namespace SoftArt\Packages\Analytics;
 
 use Illuminate\Support\Facades\Facade;
 

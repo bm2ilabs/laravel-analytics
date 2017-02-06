@@ -1,12 +1,14 @@
-<?php
+<?php namespace SoftArt\Packages\Analytics;
 
-namespace Spatie\Analytics;
-
-use Carbon\Carbon;
-use Google_Service_Analytics;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\Macroable;
+use Spatie\Analytics\Period;
+use Illuminate\Support\Collection;
+use Google_Service_Analytics;
+use Carbon\Carbon;
 
+/**
+* Analytics
+*/
 class Analytics
 {
     use Macroable;
@@ -14,14 +16,14 @@ class Analytics
     /** @var \Spatie\Analytics\AnalyticsClient */
     protected $client;
 
-    /** @var string */
+    /** @var*/
     protected $viewId;
 
     /**
      * @param \Spatie\Analytics\AnalyticsClient $client
-     * @param string                            $viewId
+     * @param                           $viewId
      */
-    public function __construct(AnalyticsClient $client, string $viewId)
+    public function __construct(AnalyticsClient $client,$viewId)
     {
         $this->client = $client;
 
@@ -29,7 +31,7 @@ class Analytics
     }
 
     /**
-     * @param string $viewId
+     * @param$viewId
      *
      * @return $this
      */
@@ -40,7 +42,7 @@ class Analytics
         return $this;
     }
 
-    public function fetchVisitorsAndPageViews(Period $period): Collection
+    public function fetchVisitorsAndPageViews(Period $period)
     {
         $response = $this->performQuery(
             $period,
@@ -48,7 +50,7 @@ class Analytics
             ['dimensions' => 'ga:date,ga:pageTitle']
         );
 
-        return collect($response['rows'] ?? [])->map(function (array $dateRow) {
+        return collect($response['rows'] ?: [])->map(function (array $dateRow) {
             return [
                 'date' => Carbon::createFromFormat('Ymd', $dateRow[0]),
                 'pageTitle' => $dateRow[1],
@@ -58,7 +60,7 @@ class Analytics
         });
     }
 
-    public function fetchTotalVisitorsAndPageViews(Period $period): Collection
+    public function fetchTotalVisitorsAndPageViews(Period $period)
     {
         $response = $this->performQuery(
             $period,
@@ -66,7 +68,7 @@ class Analytics
             ['dimensions' => 'ga:date']
         );
 
-        return collect($response['rows'] ?? [])->map(function (array $dateRow) {
+        return collect($response['rows'] ?: [])->map(function (array $dateRow) {
             return [
                 'date' => Carbon::createFromFormat('Ymd', $dateRow[0]),
                 'visitors' => (int) $dateRow[1],
@@ -75,7 +77,7 @@ class Analytics
         });
     }
 
-    public function fetchMostVisitedPages(Period $period, int $maxResults = 20): Collection
+    public function fetchMostVisitedPages(Period $period, $maxResults = 20)
     {
         $response = $this->performQuery(
             $period,
@@ -87,7 +89,7 @@ class Analytics
             ]
         );
 
-        return collect($response['rows'] ?? [])
+        return collect($response['rows'] ?: [])
             ->map(function (array $pageRow) {
                 return [
                     'url' => $pageRow[0],
@@ -97,7 +99,7 @@ class Analytics
             });
     }
 
-    public function fetchTopReferrers(Period $period, int $maxResults = 20): Collection
+    public function fetchTopReferrers(Period $period, $maxResults = 20)
     {
         $response = $this->performQuery($period,
             'ga:pageviews',
@@ -108,7 +110,7 @@ class Analytics
             ]
         );
 
-        return collect($response['rows'] ?? [])->map(function (array $pageRow) {
+        return collect($response['rows'] ?: [])->map(function (array $pageRow) {
             return [
                 'url' => $pageRow[0],
                 'pageViews' => (int) $pageRow[1],
@@ -116,7 +118,7 @@ class Analytics
         });
     }
 
-    public function fetchTopBrowsers(Period $period, int $maxResults = 10): Collection
+    public function fetchTopBrowsers(Period $period, $maxResults = 10)
     {
         $response = $this->performQuery(
             $period,
@@ -127,7 +129,7 @@ class Analytics
             ]
         );
 
-        $topBrowsers = collect($response['rows'] ?? [])->map(function (array $browserRow) {
+        $topBrowsers = collect($response['rows'] ?: [])->map(function (array $browserRow) {
             return [
                 'browser' => $browserRow[0],
                 'sessions' => (int) $browserRow[1],
@@ -141,7 +143,7 @@ class Analytics
         return $this->summarizeTopBrowsers($topBrowsers, $maxResults);
     }
 
-    protected function summarizeTopBrowsers(Collection $topBrowsers, int $maxResults): Collection
+    protected function summarizeTopBrowsers(Collection $topBrowsers, $maxResults)
     {
         return $topBrowsers
             ->take($maxResults - 1)
@@ -155,12 +157,12 @@ class Analytics
      * Call the query method on the authenticated client.
      *
      * @param Period $period
-     * @param string $metrics
+     * @param$metrics
      * @param array  $others
      *
      * @return array|null
      */
-    public function performQuery(Period $period, string $metrics, array $others = [])
+    public function performQuery(Period $period,$metrics, array $others = [])
     {
         return $this->client->performQuery(
             $this->viewId,
@@ -172,13 +174,44 @@ class Analytics
     }
 
     /**
+     * Call the real time query method on the authenticated client.
+     *
+     * @param  $metrics
+     * @param array    $others
+     *
+     * @return mixed
+     */
+    public function performRealTimeQuery($metrics, $others = array())
+    {
+        return $this->client->performRealTimeQuery($this->viewId, $metrics, $others);
+    }
+
+    /**
      * Get the underlying Google_Service_Analytics object. You can use this
      * to basically call anything on the Google Analytics API.
      *
      * @return \Google_Service_Analytics
      */
-    public function getAnalyticsService(): Google_Service_Analytics
+    public function getAnalyticsService()
     {
         return $this->client->getAnalyticsService();
+    }
+
+     /**
+     * Get the number of active users currently on the site
+     *
+     * @param array  $others
+     *
+     * @return int
+     */
+    public function getActiveUsers($others = array())
+    {
+        $answer = $this->performRealTimeQuery('rt:activeUsers', $others);
+
+        if (is_null($answer->rows)) {
+            return 0;
+        }
+
+        return $answer->rows[0][0];
     }
 }
