@@ -1,8 +1,8 @@
-<?php namespace SoftArt\Packages\Analytics;
+<?php namespace Spatie\Analytics;
 
-use SoftArt\Packages\Analytics\Analytics;
-use SoftArt\Packages\Analytics\AnalyticsClient;
-use SoftArt\Packages\Analytics\AnalyticsClientFactory;
+use Spatie\Analytics\Analytics;
+use Spatie\Analytics\AnalyticsClient;
+use Spatie\Analytics\AnalyticsClientFactory;
 
 /**
 * AnalyticsServiceProvider

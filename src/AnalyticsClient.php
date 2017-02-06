@@ -1,4 +1,4 @@
-<?php namespace SoftArt\Packages\Analytics;
+<?php namespace Spatie\Analytics;
 
 use DateTime;
 use Google_Service_Analytics;

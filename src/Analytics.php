@@ -1,4 +1,4 @@
-<?php namespace SoftArt\Packages\Analytics;
+<?php namespace Spatie\Analytics;
 
 use Illuminate\Support\Traits\Macroable;
 use Spatie\Analytics\Period;

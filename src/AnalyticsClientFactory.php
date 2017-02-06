@@ -1,9 +1,9 @@
-<?php namespace SoftArt\Packages\Analytics;
+<?php namespace Spatie\Analytics;
 
 use Google_Client;
 use Google_Service_Analytics;
 use Illuminate\Contracts\Cache\Repository;
-use SoftArt\Packages\Analytics\AnalyticsClient;
+use Spatie\Analytics\AnalyticsClient;
 
 class AnalyticsClientFactory
 {
