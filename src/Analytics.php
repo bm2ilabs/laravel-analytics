@@ -35,7 +35,7 @@ class Analytics
      *
      * @return $this
      */
-    public function setViewId(string $viewId)
+    public function setViewId($viewId)
     {
         $this->viewId = $viewId;
 
@@ -50,7 +50,7 @@ class Analytics
             ['dimensions' => 'ga:date,ga:pageTitle']
         );
 
-        return collect($response['rows'] ?: [])->map(function (array $dateRow) {
+        return collect($response['rows'] ? $response['rows'] : [])->map(function (array $dateRow) {
             return [
                 'date' => Carbon::createFromFormat('Ymd', $dateRow[0]),
                 'pageTitle' => $dateRow[1],
@@ -68,7 +68,7 @@ class Analytics
             ['dimensions' => 'ga:date']
         );
 
-        return collect($response['rows'] ?: [])->map(function (array $dateRow) {
+        return collect($response['rows'] ? $response['rows'] : [])->map(function (array $dateRow) {
             return [
                 'date' => Carbon::createFromFormat('Ymd', $dateRow[0]),
                 'visitors' => (int) $dateRow[1],
@@ -89,7 +89,7 @@ class Analytics
             ]
         );
 
-        return collect($response['rows'] ?: [])
+        return collect($response['rows'] ? $response['rows'] : [])
             ->map(function (array $pageRow) {
                 return [
                     'url' => $pageRow[0],
@@ -110,7 +110,7 @@ class Analytics
             ]
         );
 
-        return collect($response['rows'] ?: [])->map(function (array $pageRow) {
+        return collect($response['rows'] ? $response['rows'] : [])->map(function (array $pageRow) {
             return [
                 'url' => $pageRow[0],
                 'pageViews' => (int) $pageRow[1],
@@ -129,7 +129,7 @@ class Analytics
             ]
         );
 
-        $topBrowsers = collect($response['rows'] ?: [])->map(function (array $browserRow) {
+        $topBrowsers = collect($response['rows'] ? $response['rows'] : [])->map(function (array $browserRow) {
             return [
                 'browser' => $browserRow[0],
                 'sessions' => (int) $browserRow[1],
